@@ -249,6 +249,36 @@ TWILIO_PHONE=+1234567890
 - ⏳ Auditoría completa
 - ⏳ Backup automático
 
+## 📮 Testing con Postman
+
+Incluye una colección completa de Postman para testing y documentación de la API.
+
+### 🚀 Importar Colección
+```bash
+# Importar desde GitHub (recomendado)
+1. Abrir Postman → Import → Link
+2. Pegar: https://raw.githubusercontent.com/mcquaas/safebox-mx-api/master/postman/SafeBox-MX-API.postman_collection.json
+3. Importar entorno: https://raw.githubusercontent.com/mcquaas/safebox-mx-api/master/postman/SafeBox-MX-API.postman_environment.json
+```
+
+### 📋 Colecciones Incluidas
+- **🔐 Authentication** - Registro y login de usuarios
+- **👤 User Management** - Gestión de perfil y configuración
+- **📁 Document Categories** - Categorías del sistema y personalizadas
+- **📄 Documents** - CRUD completo con filtros y búsqueda
+- **👥 Contacts** - Gestión de contactos de emergencia
+- **🚨 Emergency System** - Activación y notificaciones
+- **📊 Logs** - Historial de emergencias y autenticación
+
+### ✨ Características
+- ✅ **Tests automáticos** en cada request
+- ✅ **Variables de entorno** configuradas automáticamente
+- ✅ **JWT token** se configura automáticamente al login
+- ✅ **Documentación completa** con ejemplos
+- ✅ **Flujo de pruebas** recomendado
+
+Ver documentación completa en [`/postman/README.md`](./postman/README.md)
+
 ## 📱 Integración Frontend
 
 Este backend está diseñado para trabajar con aplicaciones frontend (React, Vue, Angular) y móviles (React Native, Flutter). Proporciona una API RESTful completa con autenticación JWT.
@@ -269,6 +299,29 @@ const response = await fetch('/api/emergency/trigger', {
     emergencyPin: '1234'
   })
 });
+```
+
+## 📁 Estructura del Proyecto
+
+```
+safebox-mx-api/
+├── 📁 config/              # Configuración de Strapi
+├── 📁 src/
+│   ├── 📁 api/             # Content types y controladores
+│   │   ├── 📁 document/    # Gestión de documentos
+│   │   ├── 📁 contact/     # Contactos de emergencia
+│   │   ├── 📁 emergency/   # Sistema de emergencia
+│   │   └── 📁 ...
+│   ├── 📁 extensions/      # Extensiones de plugins
+│   └── 📁 middlewares/     # Middlewares personalizados
+├── 📁 postman/             # Colección de Postman
+│   ├── 📄 SafeBox-MX-API.postman_collection.json
+│   ├── 📄 SafeBox-MX-API.postman_environment.json
+│   └── 📄 README.md
+├── 📁 types/               # Tipos TypeScript generados
+├── 📄 ecosystem.config.js  # Configuración PM2
+├── 📄 check-status.sh      # Script de verificación
+└── 📄 README.md
 ```
 
 ## 🤝 Contribución

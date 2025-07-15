@@ -1,0 +1,816 @@
+{
+  "info": {
+    "name": "SafeBox MX API",
+    "description": "🔐 SafeBox MX - Secure Digital Vault API\n\nComplete API collection for testing all endpoints of SafeBox MX backend.\n\n## 🚀 Features Tested:\n- 🔒 Authentication (JWT)\n- 📄 Document Management\n- 🚨 Emergency System\n- 👥 Contact Management\n- 📁 Document Categories\n- 👤 User Profile Management\n\n## 🛠️ Setup:\n1. Set environment variables:\n   - `base_url`: https://api.mysafebox.org\n   - `jwt_token`: Your JWT token after login\n\n## 📚 Documentation:\nhttps://github.com/mcquaas/safebox-mx-api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "12345678-1234-1234-1234-123456789012",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    }
+  },
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('jwt_token', response.jwt);",
+                  "    pm.environment.set('user_id', response.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"testuser\",\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\",\n    \"firstName\": \"Test\",\n    \"lastName\": \"User\",\n    \"phone\": \"+1234567890\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/local/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "local", "register"]
+            },
+            "description": "Register a new user account"
+          }
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('jwt_token', response.jwt);",
+                  "    pm.environment.set('user_id', response.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"identifier\": \"test@example.com\",\n    \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/local",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "local"]
+            },
+            "description": "Login with email and password"
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me"]
+            },
+            "description": "Get current user information"
+          }
+        }
+      ],
+      "description": "Authentication endpoints for user registration and login"
+    },
+    {
+      "name": "👤 User Management",
+      "item": [
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "me"]
+            },
+            "description": "Get detailed user profile with relationships"
+          }
+        },
+        {
+          "name": "Update Emergency PIN",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"currentPin\": \"1234\",\n    \"newPin\": \"5678\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/emergency-pin",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "emergency-pin"]
+            },
+            "description": "Update user's emergency PIN"
+          }
+        },
+        {
+          "name": "Configure Biometric Auth",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/biometric",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "biometric"]
+            },
+            "description": "Enable or disable biometric authentication"
+          }
+        },
+        {
+          "name": "Delete Account (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "me"]
+            },
+            "description": "Soft delete user account"
+          }
+        }
+      ],
+      "description": "User profile management endpoints"
+    },
+    {
+      "name": "📁 Document Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/document-categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "document-categories"]
+            },
+            "description": "Get all document categories (system + user custom)"
+          }
+        },
+        {
+          "name": "Create Custom Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"data\": {\n        \"name\": \"Pasaportes\",\n        \"icon\": \"passport\",\n        \"systemCategory\": false\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/document-categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "document-categories"]
+            },
+            "description": "Create a custom document category"
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"data\": {\n        \"name\": \"Documentos de Viaje\",\n        \"icon\": \"travel\"\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/document-categories/{{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "document-categories", "{{category_id}}"]
+            },
+            "description": "Update a custom document category"
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/document-categories/{{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "document-categories", "{{category_id}}"]
+            },
+            "description": "Delete a custom document category"
+          }
+        }
+      ],
+      "description": "Document category management endpoints"
+    },
+    {
+      "name": "📄 Documents",
+      "item": [
+        {
+          "name": "Get All Documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/documents",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents"]
+            },
+            "description": "Get all user documents"
+          }
+        },
+        {
+          "name": "Get Documents by Category",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/documents?category=Legal",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "Legal"
+                }
+              ]
+            },
+            "description": "Filter documents by category name"
+          }
+        },
+        {
+          "name": "Search Documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/documents?search=acta",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "acta"
+                }
+              ]
+            },
+            "description": "Search documents by title"
+          }
+        },
+        {
+          "name": "Get Emergency Documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/documents?emergencyOnly=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents"],
+              "query": [
+                {
+                  "key": "emergencyOnly",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Get documents marked for emergency sharing"
+          }
+        },
+        {
+          "name": "Upload Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Acta de Nacimiento",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Documento oficial de nacimiento",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "1",
+                  "type": "text",
+                  "description": "Category ID"
+                },
+                {
+                  "key": "visibleToContacts",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "emergencyOnly",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/documents",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents"]
+            },
+            "description": "Upload a new document with file"
+          }
+        },
+        {
+          "name": "Update Document",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Acta de Nacimiento Actualizada\",\n    \"description\": \"Documento oficial de nacimiento - versión actualizada\",\n    \"category\": 1,\n    \"visibleToContacts\": true,\n    \"emergencyOnly\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/documents/{{document_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents", "{{document_id}}"]
+            },
+            "description": "Update document metadata"
+          }
+        },
+        {
+          "name": "Delete Document",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/documents/{{document_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents", "{{document_id}}"]
+            },
+            "description": "Delete a document"
+          }
+        },
+        {
+          "name": "Get Document Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/documents/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "documents", "stats"]
+            },
+            "description": "Get document statistics by category"
+          }
+        }
+      ],
+      "description": "Document management endpoints"
+    },
+    {
+      "name": "👥 Contacts",
+      "item": [
+        {
+          "name": "Get All Contacts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/contacts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts"]
+            },
+            "description": "Get all user contacts"
+          }
+        },
+        {
+          "name": "Create Contact",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('contact_id', response.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"data\": {\n        \"fullName\": \"María González\",\n        \"phone\": \"+1-555-0123\",\n        \"email\": \"maria@example.com\",\n        \"relationship\": \"Esposa\",\n        \"canReceiveEmergencyAlert\": true,\n        \"canViewSharedDocs\": false\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/contacts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts"]
+            },
+            "description": "Create a new emergency contact"
+          }
+        },
+        {
+          "name": "Update Contact",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"data\": {\n        \"fullName\": \"María González López\",\n        \"phone\": \"+1-555-0123\",\n        \"email\": \"maria.gonzalez@example.com\",\n        \"relationship\": \"Esposa\",\n        \"canReceiveEmergencyAlert\": true,\n        \"canViewSharedDocs\": true\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/contacts/{{contact_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts", "{{contact_id}}"]
+            },
+            "description": "Update contact information"
+          }
+        },
+        {
+          "name": "Delete Contact",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/contacts/{{contact_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts", "{{contact_id}}"]
+            },
+            "description": "Delete a contact"
+          }
+        }
+      ],
+      "description": "Emergency contact management endpoints"
+    },
+    {
+      "name": "🚨 Emergency System",
+      "item": [
+        {
+          "name": "Trigger Emergency",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"location\": \"Ciudad de México, México\",\n    \"latitude\": 19.4326,\n    \"longitude\": -99.1332,\n    \"emergencyPin\": \"1234\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/emergency/trigger",
+              "host": ["{{base_url}}"],
+              "path": ["api", "emergency", "trigger"]
+            },
+            "description": "Activate emergency mode and notify all emergency contacts"
+          }
+        },
+        {
+          "name": "Notify Specific Contact",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"message\": \"Necesito ayuda urgente. Por favor contacta conmigo.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/emergency/notify/{{contact_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "emergency", "notify", "{{contact_id}}"]
+            },
+            "description": "Send manual notification to a specific contact"
+          }
+        }
+      ],
+      "description": "Emergency activation and notification endpoints"
+    },
+    {
+      "name": "📊 Emergency Logs",
+      "item": [
+        {
+          "name": "Get Emergency Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/emergency-logs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "emergency-logs"]
+            },
+            "description": "Get emergency activation history"
+          }
+        },
+        {
+          "name": "Get Specific Emergency Log",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/emergency-logs/{{log_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "emergency-logs", "{{log_id}}"]
+            },
+            "description": "Get details of a specific emergency activation"
+          }
+        }
+      ],
+      "description": "Emergency logs and history endpoints"
+    },
+    {
+      "name": "🔍 Auth Logs",
+      "item": [
+        {
+          "name": "Get Auth Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth-logs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth-logs"]
+            },
+            "description": "Get authentication history and security logs"
+          }
+        }
+      ],
+      "description": "Authentication and security log endpoints"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-set base URL if not configured",
+          "if (!pm.environment.get('base_url')) {",
+          "    pm.environment.set('base_url', 'https://api.mysafebox.org');",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "pm.test('Status code is successful', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 204]);",
+          "});",
+          "",
+          "pm.test('Response time is less than 2000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+          "});",
+          "",
+          "pm.test('Content-Type is present', function () {",
+          "    pm.expect(pm.response.headers.get('Content-Type')).to.exist;",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api.mysafebox.org",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "contact_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "document_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "category_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "log_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+} 
