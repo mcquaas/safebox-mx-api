@@ -7,6 +7,8 @@ export default {
       config: {
         policies: [],
         middlewares: [],
+        description: 'Activar el botón de emergencia y notificar contactos designados',
+        tags: ['Emergency'],
       },
     },
     {
@@ -16,6 +18,8 @@ export default {
       config: {
         policies: [],
         middlewares: [],
+        description: 'Notificar a un contacto específico sobre una emergencia',
+        tags: ['Emergency'],
       },
     },
   ],

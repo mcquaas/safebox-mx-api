@@ -7,6 +7,8 @@ export default {
       config: {
         policies: [],
         middlewares: [],
+        description: 'Eliminar cuenta de usuario (soft delete)',
+        tags: ['User'],
       },
     },
     {
@@ -16,6 +18,8 @@ export default {
       config: {
         policies: [],
         middlewares: [],
+        description: 'Actualizar el PIN de emergencia del usuario',
+        tags: ['User'],
       },
     },
     {
@@ -25,6 +29,8 @@ export default {
       config: {
         policies: [],
         middlewares: [],
+        description: 'Activar/desactivar autenticación biométrica',
+        tags: ['User'],
       },
     },
     {
@@ -34,6 +40,8 @@ export default {
       config: {
         policies: [],
         middlewares: [],
+        description: 'Obtener información del usuario autenticado',
+        tags: ['User'],
       },
     },
   ],

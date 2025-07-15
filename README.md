@@ -37,6 +37,7 @@ SafeBox MX es una bóveda digital segura que permite a los usuarios almacenar, o
 - **Backend**: Strapi V5 (Node.js, TypeScript)
 - **Base de datos**: SQLite (desarrollo) / PostgreSQL (producción)
 - **Autenticación**: JWT + Users & Permissions plugin
+- **Documentación**: Swagger UI + OpenAPI 3.0
 - **Deployment**: PM2 + Nginx + Let's Encrypt SSL
 - **Notificaciones**: Email (Strapi) + SMS (Twilio - por implementar)
 
@@ -231,6 +232,26 @@ TWILIO_TOKEN=tu_twilio_token
 TWILIO_PHONE=+1234567890
 ```
 
+## 📚 Documentación API
+
+### 🔗 Swagger UI
+La documentación interactiva está disponible en:
+- **Producción**: https://api.mysafebox.org/api/documentation
+- **Desarrollo**: http://localhost:1337/api/documentation
+
+### 📋 Especificación OpenAPI
+- **JSON**: https://api.mysafebox.org/api/documentation/spec
+- **Postman Collection**: [SafeBox-MX-API.postman_collection.json](postman/SafeBox-MX-API.postman_collection.json)
+
+### 🎯 Endpoints Principales
+- **Autenticación**: `/auth/local/register`, `/auth/local`
+- **Usuario**: `/user/me`, `/user/emergency-pin`, `/user/biometric`
+- **Documentos**: `/documents`, `/documents/stats`
+- **Categorías**: `/document-categories`
+- **Contactos**: `/contacts`
+- **Emergencia**: `/emergency/trigger`, `/emergency/notify/{id}`
+- **Logs**: `/auth-logs`, `/emergency-logs`
+
 ## 🔐 Seguridad
 
 ### Implementado
@@ -241,6 +262,7 @@ TWILIO_PHONE=+1234567890
 - ✅ SSL/TLS (Let's Encrypt)
 - ✅ Soft delete de usuarios
 - ✅ Logs de autenticación
+- ✅ Documentación Swagger
 
 ### Por Implementar
 - ⏳ Cifrado de archivos

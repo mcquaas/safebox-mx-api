@@ -7,6 +7,8 @@ export default {
       config: {
         policies: [],
         middlewares: [],
+        description: 'Obtener todos los documentos del usuario autenticado',
+        tags: ['Document'],
       },
     },
     {
@@ -16,6 +18,8 @@ export default {
       config: {
         policies: [],
         middlewares: [],
+        description: 'Crear un nuevo documento',
+        tags: ['Document'],
       },
     },
     {
@@ -25,6 +29,8 @@ export default {
       config: {
         policies: [],
         middlewares: [],
+        description: 'Actualizar un documento existente',
+        tags: ['Document'],
       },
     },
     {
@@ -34,6 +40,8 @@ export default {
       config: {
         policies: [],
         middlewares: [],
+        description: 'Eliminar un documento',
+        tags: ['Document'],
       },
     },
     {
@@ -43,6 +51,8 @@ export default {
       config: {
         policies: [],
         middlewares: [],
+        description: 'Obtener estadísticas de documentos del usuario',
+        tags: ['Document'],
       },
     },
   ],
