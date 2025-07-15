@@ -1,0 +1,52 @@
+{
+  "kind": "collectionType",
+  "collectionName": "contacts",
+  "info": {
+    "singularName": "contact",
+    "pluralName": "contacts",
+    "displayName": "Contact",
+    "description": "Emergency contacts for users"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "fullName": {
+      "type": "string",
+      "required": true
+    },
+    "phone": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "email",
+      "required": false
+    },
+    "relationship": {
+      "type": "string",
+      "required": true
+    },
+    "canReceiveEmergencyAlert": {
+      "type": "boolean",
+      "default": true
+    },
+    "canViewSharedDocs": {
+      "type": "boolean",
+      "default": false
+    },
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "contacts"
+    },
+    "emergencyLogs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::emergency-log.emergency-log",
+      "mappedBy": "contactNotified"
+    }
+  }
+} 

@@ -1,0 +1,60 @@
+{
+  "kind": "collectionType",
+  "collectionName": "documents",
+  "info": {
+    "singularName": "document",
+    "pluralName": "documents",
+    "displayName": "Document",
+    "description": "User uploaded documents"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "text",
+      "required": false
+    },
+    "file": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["images", "files", "videos", "audios"]
+    },
+    "uploadedAt": {
+      "type": "datetime",
+      "default": "now"
+    },
+    "visibleToContacts": {
+      "type": "boolean",
+      "default": false
+    },
+    "emergencyOnly": {
+      "type": "boolean",
+      "default": false
+    },
+    "category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::document-category.document-category",
+      "inversedBy": "documents"
+    },
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "documents"
+    },
+    "emergencyLogs": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::emergency-log.emergency-log",
+      "mappedBy": "documentsShared"
+    }
+  }
+} 

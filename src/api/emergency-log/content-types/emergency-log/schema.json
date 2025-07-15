@@ -1,0 +1,50 @@
+{
+  "kind": "collectionType",
+  "collectionName": "emergency_logs",
+  "info": {
+    "singularName": "emergency-log",
+    "pluralName": "emergency-logs",
+    "displayName": "Emergency Log",
+    "description": "Log of emergency activations"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "triggeredAt": {
+      "type": "datetime",
+      "default": "now"
+    },
+    "location": {
+      "type": "string",
+      "required": false
+    },
+    "latitude": {
+      "type": "decimal",
+      "required": false
+    },
+    "longitude": {
+      "type": "decimal",
+      "required": false
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "emergencyLogs"
+    },
+    "contactNotified": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::contact.contact",
+      "inversedBy": "emergencyLogs"
+    },
+    "documentsShared": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::document.document",
+      "inversedBy": "emergencyLogs"
+    }
+  }
+} 

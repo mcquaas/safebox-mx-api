@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "document_categories",
+  "info": {
+    "singularName": "document-category",
+    "pluralName": "document-categories",
+    "displayName": "Document Category",
+    "description": "Categories for organizing documents"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "icon": {
+      "type": "string",
+      "required": false
+    },
+    "systemCategory": {
+      "type": "boolean",
+      "default": false
+    },
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "documentCategories"
+    },
+    "documents": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::document.document",
+      "mappedBy": "category"
+    }
+  }
+} 

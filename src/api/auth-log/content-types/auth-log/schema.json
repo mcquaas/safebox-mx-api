@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "auth_logs",
+  "info": {
+    "singularName": "auth-log",
+    "pluralName": "auth-logs",
+    "displayName": "Auth Log",
+    "description": "Authentication events log"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "method": {
+      "type": "enumeration",
+      "enum": ["pin", "biometric", "password"],
+      "required": true
+    },
+    "success": {
+      "type": "boolean",
+      "default": false
+    },
+    "timestamp": {
+      "type": "datetime",
+      "default": "now"
+    },
+    "ipAddress": {
+      "type": "string",
+      "required": false
+    },
+    "userAgent": {
+      "type": "string",
+      "required": false
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "authLogs"
+    }
+  }
+} 
