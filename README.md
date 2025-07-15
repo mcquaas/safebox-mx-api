@@ -252,6 +252,37 @@ La documentación interactiva está disponible en:
 - **Emergencia**: `/emergency/trigger`, `/emergency/notify/{id}`
 - **Logs**: `/auth-logs`, `/emergency-logs`
 
+## 🌱 Datos de Ejemplo (Seeding)
+
+### 🚀 Script de Seeding
+Para generar datos de ejemplo para desarrollo y demostración:
+
+```bash
+# Instalar dependencias
+sudo apt-get install curl jq
+
+# Ejecutar seeding (producción)
+./seed.sh
+
+# Ejecutar seeding (desarrollo local)
+./seed.sh --local
+
+# Ver ayuda
+./seed.sh --help
+```
+
+### 🎯 Datos Generados
+- **Usuario de demo**: `demo@safebox.mx` / `SafeBox123!`
+- **PIN de emergencia**: `1234`
+- **4 contactos de emergencia** con diferentes permisos
+- **10 documentos de ejemplo** en 4 categorías
+- **Configuración completa** lista para pruebas
+
+### 📖 Documentación Completa
+- **Guía de Seeding**: [docs/seeding-guide.md](docs/seeding-guide.md)
+- **Datos generados**: Basados en el frontend funcional
+- **Seguridad**: Solo para desarrollo/demostración
+
 ## 🔐 Seguridad
 
 ### Implementado
