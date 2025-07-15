@@ -1,9 +1,13 @@
 #!/bin/bash
 
 # SafeBox MX - Script de Seeding
-# Genera datos de ejemplo para desarrollo y demostración
+# Genera datos de demostración para el sistema SafeBox MX
 
-set -e
+# Configuración
+API_URL="${API_URL:-https://api.mysafebox.org/api}"
+DEMO_EMAIL="demo@safebox.mx"
+DEMO_PASSWORD="SafeBox123!"
+DEMO_USERNAME="demo"
 
 # Colores para output
 RED='\033[0;31m'
@@ -12,558 +16,270 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuración
-API_URL="https://api.mysafebox.org/api"
-# API_URL="http://localhost:1337/api"  # Para desarrollo local
-
 # Variables globales
 JWT_TOKEN=""
 USER_ID=""
 
-# Función para mostrar mensajes
+# Función para imprimir mensajes con color
 print_message() {
-    echo -e "${GREEN}[SEED]${NC} $1"
-}
-
-print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+    local color=$1
+    local message=$2
+    echo -e "${color}[SEED]${NC} $message"
 }
 
 print_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
 
-# Función para hacer requests HTTP
-make_request() {
-    local method=$1
-    local endpoint=$2
-    local data=$3
-    local content_type=${4:-"application/json"}
-    
-    if [ -n "$data" ]; then
-        if [ "$content_type" = "multipart/form-data" ]; then
-            curl -s -X $method \
-                -H "Authorization: Bearer $JWT_TOKEN" \
-                $data \
-                "$API_URL$endpoint"
-        else
-            curl -s -X $method \
-                -H "Content-Type: $content_type" \
-                -H "Authorization: Bearer $JWT_TOKEN" \
-                -d "$data" \
-                "$API_URL$endpoint"
-        fi
-    else
-        curl -s -X $method \
-            -H "Authorization: Bearer $JWT_TOKEN" \
-            "$API_URL$endpoint"
-    fi
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
-# Función para registrar usuario de ejemplo
-register_user() {
-    print_message "Registrando usuario de ejemplo..."
-    
-    local response=$(curl -s -X POST \
-        -H "Content-Type: application/json" \
-        -d '{
-            "username": "demo_user",
-            "email": "demo@safebox.mx",
-            "password": "SafeBox123!",
-            "firstName": "Juan Carlos",
-            "lastName": "González",
-            "phone": "+52-555-0123"
-        }' \
-        "$API_URL/auth/local/register")
-    
-    JWT_TOKEN=$(echo $response | jq -r '.jwt // empty')
-    USER_ID=$(echo $response | jq -r '.user.id // empty')
-    
-    if [ -z "$JWT_TOKEN" ] || [ "$JWT_TOKEN" = "null" ]; then
-        print_warning "Usuario ya existe, intentando login..."
-        login_user
-    else
-        print_message "Usuario registrado exitosamente. ID: $USER_ID"
-    fi
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
-# Función para hacer login
-login_user() {
-    print_message "Iniciando sesión..."
-    
-    local response=$(curl -s -X POST \
-        -H "Content-Type: application/json" \
-        -d '{
-            "identifier": "demo@safebox.mx",
-            "password": "SafeBox123!"
-        }' \
-        "$API_URL/auth/local")
-    
-    JWT_TOKEN=$(echo $response | jq -r '.jwt // empty')
-    USER_ID=$(echo $response | jq -r '.user.id // empty')
-    
-    if [ -z "$JWT_TOKEN" ] || [ "$JWT_TOKEN" = "null" ]; then
-        print_error "Error al iniciar sesión"
-        exit 1
-    else
-        print_message "Sesión iniciada exitosamente. ID: $USER_ID"
-    fi
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Función para configurar PIN de emergencia
-setup_emergency_pin() {
-    print_message "Configurando PIN de emergencia..."
-    
-    local response=$(make_request "PUT" "/user/emergency-pin" '{
-        "emergencyPin": "1234"
-    }')
-    
-    print_info "PIN de emergencia configurado: 1234"
-}
-
-# Función para crear contactos de emergencia
-create_contacts() {
-    print_message "Creando contactos de emergencia..."
-    
-    # Contacto 1: María González (Esposa)
-    local contact1=$(make_request "POST" "/contacts" '{
-        "fullName": "María González",
-        "phone": "+1-555-0123",
-        "email": "maria.gonzalez@email.com",
-        "relationship": "Esposa",
-        "canReceiveEmergencyAlert": true,
-        "canViewSharedDocs": true
-    }')
-    
-    print_info "Contacto creado: María González (Esposa)"
-    
-    # Contacto 2: Lic. Rodríguez (Abogado)
-    local contact2=$(make_request "POST" "/contacts" '{
-        "fullName": "Lic. Rodríguez",
-        "phone": "+1-555-0456",
-        "email": "lic.rodriguez@bufete.com",
-        "relationship": "Abogado",
-        "canReceiveEmergencyAlert": true,
-        "canViewSharedDocs": true
-    }')
-    
-    print_info "Contacto creado: Lic. Rodríguez (Abogado)"
-    
-    # Contacto 3: Dr. Martínez (Médico)
-    local contact3=$(make_request "POST" "/contacts" '{
-        "fullName": "Dr. Martínez",
-        "phone": "+1-555-0789",
-        "email": "dr.martinez@hospital.com",
-        "relationship": "Médico",
-        "canReceiveEmergencyAlert": false,
-        "canViewSharedDocs": true
-    }')
-    
-    print_info "Contacto creado: Dr. Martínez (Médico)"
-    
-    # Contacto 4: Ana García (Hermana)
-    local contact4=$(make_request "POST" "/contacts" '{
-        "fullName": "Ana García",
-        "phone": "+52-555-0321",
-        "email": "ana.garcia@email.com",
-        "relationship": "Hermana",
-        "canReceiveEmergencyAlert": true,
-        "canViewSharedDocs": false
-    }')
-    
-    print_info "Contacto creado: Ana García (Hermana)"
-}
-
-# Función para obtener categorías
-get_categories() {
-    print_message "Obteniendo categorías disponibles..."
-    
-    local response=$(make_request "GET" "/document-categories")
-    echo $response | jq -r '.data[] | "\(.id):\(.name)"' > /tmp/categories.txt
-    
-    print_info "Categorías disponibles:"
-    cat /tmp/categories.txt
-}
-
-# Función para crear documentos de ejemplo
-create_documents() {
-    print_message "Creando documentos de ejemplo..."
-    
-    # Obtener IDs de categorías
-    get_categories
-    
-    local id_categoria=$(grep "Identificación" /tmp/categories.txt | cut -d: -f1)
-    local legal_categoria=$(grep "Legal" /tmp/categories.txt | cut -d: -f1)
-    local medico_categoria=$(grep "Médico" /tmp/categories.txt | cut -d: -f1)
-    local contactos_categoria=$(grep "Contactos" /tmp/categories.txt | cut -d: -f1)
-    
-    # Crear archivos de ejemplo temporales
-    create_sample_files
-    
-    # Documento 1: Identificación Oficial
-    print_info "Creando documento: Identificación Oficial"
-    local doc1=$(make_request "POST" "/documents" \
-        "-F title='Identificación Oficial' \
-         -F description='Cédula de identidad oficial vigente' \
-         -F category=$id_categoria \
-         -F visibleToContacts=true \
-         -F emergencyOnly=false \
-         -F file=@/tmp/identificacion.pdf" \
-        "multipart/form-data")
-    
-    # Documento 2: Acta de Nacimiento
-    print_info "Creando documento: Acta de Nacimiento"
-    local doc2=$(make_request "POST" "/documents" \
-        "-F title='Acta de Nacimiento' \
-         -F description='Acta de nacimiento certificada' \
-         -F category=$legal_categoria \
-         -F visibleToContacts=true \
-         -F emergencyOnly=false \
-         -F file=@/tmp/acta_nacimiento.pdf" \
-        "multipart/form-data")
-    
-    # Documento 3: Permiso de Trabajo
-    print_info "Creando documento: Permiso de Trabajo"
-    local doc3=$(make_request "POST" "/documents" \
-        "-F title='Permiso de Trabajo' \
-         -F description='Autorización de trabajo vigente' \
-         -F category=$legal_categoria \
-         -F visibleToContacts=true \
-         -F emergencyOnly=true \
-         -F file=@/tmp/permiso_trabajo.pdf" \
-        "multipart/form-data")
-    
-    # Documento 4: Contacto Abogado
-    print_info "Creando documento: Contacto Abogado"
-    local doc4=$(make_request "POST" "/documents" \
-        "-F title='Contacto Abogado' \
-         -F description='Información de contacto del abogado de confianza' \
-         -F category=$contactos_categoria \
-         -F visibleToContacts=true \
-         -F emergencyOnly=false \
-         -F file=@/tmp/contacto_abogado.pdf" \
-        "multipart/form-data")
-    
-    # Documento 5: Seguro Médico
-    print_info "Creando documento: Seguro Médico"
-    local doc5=$(make_request "POST" "/documents" \
-        "-F title='Seguro Médico' \
-         -F description='Póliza de seguro médico vigente' \
-         -F category=$medico_categoria \
-         -F visibleToContacts=true \
-         -F emergencyOnly=true \
-         -F file=@/tmp/seguro_medico.pdf" \
-        "multipart/form-data")
-    
-    # Documento 6: Historial Médico
-    print_info "Creando documento: Historial Médico"
-    local doc6=$(make_request "POST" "/documents" \
-        "-F title='Historial Médico' \
-         -F description='Historial médico y alergias importantes' \
-         -F category=$medico_categoria \
-         -F visibleToContacts=false \
-         -F emergencyOnly=true \
-         -F file=@/tmp/historial_medico.pdf" \
-        "multipart/form-data")
-    
-    # Documento 7: Pasaporte
-    print_info "Creando documento: Pasaporte"
-    local doc7=$(make_request "POST" "/documents" \
-        "-F title='Pasaporte' \
-         -F description='Pasaporte vigente para viajes internacionales' \
-         -F category=$id_categoria \
-         -F visibleToContacts=true \
-         -F emergencyOnly=false \
-         -F file=@/tmp/pasaporte.pdf" \
-        "multipart/form-data")
-    
-    # Documento 8: Visa de Trabajo
-    print_info "Creando documento: Visa de Trabajo"
-    local doc8=$(make_request "POST" "/documents" \
-        "-F title='Visa de Trabajo' \
-         -F description='Visa de trabajo para Estados Unidos' \
-         -F category=$legal_categoria \
-         -F visibleToContacts=true \
-         -F emergencyOnly=true \
-         -F file=@/tmp/visa_trabajo.pdf" \
-        "multipart/form-data")
-    
-    # Documento 9: Testamento
-    print_info "Creando documento: Testamento"
-    local doc9=$(make_request "POST" "/documents" \
-        "-F title='Testamento' \
-         -F description='Testamento legal actualizado' \
-         -F category=$legal_categoria \
-         -F visibleToContacts=false \
-         -F emergencyOnly=true \
-         -F file=@/tmp/testamento.pdf" \
-        "multipart/form-data")
-    
-    # Documento 10: Contactos de Emergencia
-    print_info "Creando documento: Lista de Contactos de Emergencia"
-    local doc10=$(make_request "POST" "/documents" \
-        "-F title='Lista de Contactos de Emergencia' \
-         -F description='Lista completa de contactos importantes' \
-         -F category=$contactos_categoria \
-         -F visibleToContacts=true \
-         -F emergencyOnly=true \
-         -F file=@/tmp/contactos_emergencia.pdf" \
-        "multipart/form-data")
-    
-    # Limpiar archivos temporales
-    cleanup_sample_files
-}
-
-# Función para crear archivos de ejemplo
-create_sample_files() {
-    print_info "Creando archivos de ejemplo..."
-    
-    # Crear PDFs de ejemplo usando texto plano
-    echo "IDENTIFICACIÓN OFICIAL
-    
-Nombre: Juan Carlos González
-Número: 123456789
-Fecha de Nacimiento: 15/03/1985
-Lugar de Nacimiento: Ciudad de México
-Vigencia: 2030
-
-Este es un documento de ejemplo para SafeBox MX." > /tmp/identificacion.txt
-    
-    echo "ACTA DE NACIMIENTO
-    
-Nombre: Juan Carlos González
-Fecha: 15 de Marzo de 1985
-Lugar: Ciudad de México, México
-Padre: Carlos González
-Madre: María López
-Registro: 12345
-
-Este es un documento de ejemplo para SafeBox MX." > /tmp/acta_nacimiento.txt
-    
-    echo "PERMISO DE TRABAJO
-    
-Nombre: Juan Carlos González
-Número de Permiso: W123456789
-Empleador: Tech Company Inc.
-Vigencia: 2025-12-31
-Tipo: H-1B
-
-Este es un documento de ejemplo para SafeBox MX." > /tmp/permiso_trabajo.txt
-    
-    echo "CONTACTO ABOGADO
-    
-Nombre: Lic. Rodríguez
-Bufete: Rodríguez & Asociados
-Teléfono: +1-555-0456
-Email: lic.rodriguez@bufete.com
-Especialidad: Inmigración
-Disponibilidad: 24/7
-
-Este es un documento de ejemplo para SafeBox MX." > /tmp/contacto_abogado.txt
-    
-    echo "SEGURO MÉDICO
-    
-Asegurado: Juan Carlos González
-Póliza: SM123456789
-Aseguradora: Health Insurance Co.
-Vigencia: 2025-12-31
-Cobertura: Completa
-
-Este es un documento de ejemplo para SafeBox MX." > /tmp/seguro_medico.txt
-    
-    echo "HISTORIAL MÉDICO
-    
-Paciente: Juan Carlos González
-Tipo de Sangre: O+
-Alergias: Penicilina
-Condiciones: Ninguna
-Médico: Dr. Martínez
-Última Revisión: 2024-01-15
-
-Este es un documento de ejemplo para SafeBox MX." > /tmp/historial_medico.txt
-    
-    echo "PASAPORTE
-    
-Nombre: Juan Carlos González
-Número: P123456789
-País: México
-Fecha de Emisión: 2020-01-15
-Fecha de Expiración: 2030-01-15
-
-Este es un documento de ejemplo para SafeBox MX." > /tmp/pasaporte.txt
-    
-    echo "VISA DE TRABAJO
-    
-Nombre: Juan Carlos González
-Número: V123456789
-Tipo: H-1B
-País: Estados Unidos
-Vigencia: 2025-12-31
-
-Este es un documento de ejemplo para SafeBox MX." > /tmp/visa_trabajo.txt
-    
-    echo "TESTAMENTO
-    
-Testador: Juan Carlos González
-Fecha: 2024-01-01
-Beneficiarios: María González (Esposa)
-Albacea: Lic. Rodríguez
-Notario: Público No. 123
-
-Este es un documento de ejemplo para SafeBox MX." > /tmp/testamento.txt
-    
-    echo "CONTACTOS DE EMERGENCIA
-    
-1. María González (Esposa)
-   Teléfono: +1-555-0123
-   Email: maria.gonzalez@email.com
-   
-2. Lic. Rodríguez (Abogado)
-   Teléfono: +1-555-0456
-   Email: lic.rodriguez@bufete.com
-   
-3. Dr. Martínez (Médico)
-   Teléfono: +1-555-0789
-   Email: dr.martinez@hospital.com
-
-Este es un documento de ejemplo para SafeBox MX." > /tmp/contactos_emergencia.txt
-    
-    # Convertir archivos de texto a PDF usando pandoc o crear archivos simples
-    for file in /tmp/*.txt; do
-        base=$(basename "$file" .txt)
-        cp "$file" "/tmp/${base}.pdf"
-    done
-}
-
-# Función para limpiar archivos temporales
-cleanup_sample_files() {
-    print_info "Limpiando archivos temporales..."
-    rm -f /tmp/*.txt /tmp/*.pdf /tmp/categories.txt
-}
-
-# Función para mostrar estadísticas
-show_statistics() {
-    print_message "Obteniendo estadísticas..."
-    
-    local stats=$(make_request "GET" "/documents/stats")
-    
-    echo ""
-    print_info "=== ESTADÍSTICAS DE SEEDING ==="
-    echo $stats | jq -r '
-        "Total de documentos: \(.totalDocuments)",
-        "Total de categorías: \(.totalCategories)",
-        "Documentos de emergencia: \(.emergencyDocuments)",
-        "Documentos compartidos: \(.sharedDocuments)"
-    '
-    
-    echo ""
-    print_info "Documentos por categoría:"
-    echo $stats | jq -r '.documentsByCategory[] | "  \(.category): \(.count)"'
-    
-    echo ""
-    print_info "=== CONTACTOS CREADOS ==="
-    local contacts=$(make_request "GET" "/contacts")
-    echo $contacts | jq -r '.data[] | "  \(.fullName) (\(.relationship)) - \(.phone)"'
-}
-
-# Función para mostrar información de acceso
-show_access_info() {
-    echo ""
-    print_message "=== INFORMACIÓN DE ACCESO ==="
-    echo ""
-    print_info "Usuario de prueba creado:"
-    echo "  Email: demo@safebox.mx"
-    echo "  Password: SafeBox123!"
-    echo "  PIN de Emergencia: 1234"
-    echo ""
-    print_info "URLs importantes:"
-    echo "  API: $API_URL"
-    echo "  Documentación: $API_URL/documentation"
-    echo "  Frontend: https://mysafebox.org"
-    echo ""
-    print_info "JWT Token (válido por 30 días):"
-    echo "  $JWT_TOKEN"
-    echo ""
-}
-
-# Función principal
-main() {
-    echo ""
-    print_message "=== SAFEBOX MX - SCRIPT DE SEEDING ==="
-    echo ""
-    
-    # Verificar dependencias
+# Verificar dependencias
+check_dependencies() {
     if ! command -v curl &> /dev/null; then
-        print_error "curl no está instalado"
+        print_error "curl no está instalado. Por favor instálalo: sudo apt-get install curl"
         exit 1
     fi
     
     if ! command -v jq &> /dev/null; then
-        print_error "jq no está instalado. Instálalo con: sudo apt-get install jq"
+        print_error "jq no está instalado. Por favor instálalo: sudo apt-get install jq"
         exit 1
     fi
+}
+
+# Función para hacer requests HTTP con manejo de errores
+make_request() {
+    local method=$1
+    local url=$2
+    local data=$3
+    local headers=$4
+    
+    local response
+    if [ -n "$headers" ]; then
+        response=$(eval "curl -s -X '$method' '$url' -H 'Content-Type: application/json' $headers -d '$data'")
+    else
+        response=$(curl -s -X "$method" "$url" -H "Content-Type: application/json" -d "$data")
+    fi
+    
+    echo "$response"
+}
+
+# Función para registrar/obtener usuario
+setup_user() {
+    print_message $BLUE "Configurando usuario de demostración..."
+    
+    # Obtener token JWT fresco
+    local login_response=$(make_request "POST" "$API_URL/auth/local" "{\"identifier\": \"$DEMO_EMAIL\", \"password\": \"$DEMO_PASSWORD\"}")
+    
+    if echo "$login_response" | jq -e '.jwt' > /dev/null 2>&1; then
+        print_success "Login exitoso, obteniendo token fresco"
+        JWT_TOKEN=$(echo "$login_response" | jq -r '.jwt')
+        USER_ID=$(echo "$login_response" | jq -r '.user.id')
+        print_info "Token obtenido para usuario ID: $USER_ID"
+    else
+        print_error "Error al obtener token: $(echo "$login_response" | jq -r '.error.message // "Error desconocido"')"
+        exit 1
+    fi
+}
+
+# Función para obtener categorías de documentos
+get_document_categories() {
+    print_message $BLUE "Configurando categorías de documentos..."
+    
+    # Usar IDs conocidos de las categorías existentes
+    IDENTIFICACION_ID="1"
+    LEGAL_ID="2"
+    MEDICO_ID="3"
+    CONTACTOS_ID="4"
+    
+    print_success "Categorías configuradas: Identificación($IDENTIFICACION_ID), Legal($LEGAL_ID), Médico($MEDICO_ID), Contactos($CONTACTOS_ID)"
+}
+
+# Función para crear contactos de emergencia
+create_contacts() {
+    print_message $BLUE "Creando contactos de emergencia..."
+    
+    local contacts=(
+        '{"fullName": "María González", "relationship": "Esposa", "phone": "+1-555-0123", "email": "maria.gonzalez@email.com", "canReceiveEmergencyAlert": true, "canViewSharedDocs": true}'
+        '{"fullName": "Lic. Rodríguez", "relationship": "Abogado", "phone": "+1-555-0456", "email": "lic.rodriguez@legal.com", "canReceiveEmergencyAlert": true, "canViewSharedDocs": true}'
+        '{"fullName": "Dr. Martínez", "relationship": "Médico", "phone": "+1-555-0789", "email": "dr.martinez@hospital.com", "canReceiveEmergencyAlert": false, "canViewSharedDocs": true}'
+        '{"fullName": "Ana García", "relationship": "Hermana", "phone": "+52-555-0321", "email": "ana.garcia@email.com", "canReceiveEmergencyAlert": true, "canViewSharedDocs": false}'
+    )
+    
+    local created_count=0
+    for contact_data in "${contacts[@]}"; do
+        local response=$(make_request "POST" "$API_URL/contacts" "$contact_data" "-H \"Authorization: Bearer $JWT_TOKEN\"")
+        
+        if echo "$response" | jq -e '.data' > /dev/null 2>&1; then
+            local contact_name=$(echo "$contact_data" | jq -r '.fullName')
+            print_success "Contacto creado: $contact_name"
+            ((created_count++))
+        else
+            local contact_name=$(echo "$contact_data" | jq -r '.fullName')
+            print_warning "Error creando contacto $contact_name: $(echo "$response" | jq -r '.error.message // "Error desconocido"')"
+        fi
+    done
+    
+    print_success "Contactos creados: $created_count/4"
+}
+
+# Función para crear un archivo temporal con contenido
+create_temp_file() {
+    local filename=$1
+    local content=$2
+    
+    echo "$content" > "/tmp/$filename"
+    echo "/tmp/$filename"
+}
+
+# Función para subir un documento
+upload_document() {
+    local title=$1
+    local description=$2
+    local category_id=$3
+    local filename=$4
+    local content=$5
+    local is_emergency=$6
+    
+    # Crear archivo temporal
+    local temp_file=$(create_temp_file "$filename" "$content")
+    
+    # Crear documento directamente con multipart/form-data
+    local doc_response=$(curl -s -X POST "$API_URL/documents" \
+        -H "Authorization: Bearer $JWT_TOKEN" \
+        -F "title=$title" \
+        -F "description=$description" \
+        -F "category=$category_id" \
+        -F "emergencyOnly=$is_emergency" \
+        -F "visibleToContacts=$is_emergency" \
+        -F "file=@$temp_file")
+    
+    if echo "$doc_response" | jq -e '.data' > /dev/null 2>&1; then
+        print_success "Documento creado: $title"
+    else
+        print_warning "Error creando documento $title: $(echo "$doc_response" | jq -r '.error.message // "Error desconocido"')"
+    fi
+    
+    # Limpiar archivo temporal
+    rm -f "$temp_file"
+}
+
+# Función para crear documentos de demostración
+create_documents() {
+    print_message $BLUE "Creando documentos de demostración..."
+    
+    # Documentos de Identificación
+    if [ -n "$IDENTIFICACION_ID" ]; then
+        upload_document "Identificación Oficial" "Credencial para votar o INE" "$IDENTIFICACION_ID" "identificacion_oficial.pdf" "IDENTIFICACIÓN OFICIAL\n\nNombre: Juan Carlos González\nFecha de nacimiento: 15 de mayo de 1985\nClave de elector: GNZLJC85051512H100\nVigencia: 2030" true
+        
+        upload_document "Pasaporte" "Pasaporte mexicano vigente" "$IDENTIFICACION_ID" "pasaporte.pdf" "PASAPORTE\n\nTipo: P\nCódigo del país: MEX\nNúmero de pasaporte: G12345678\nApellidos: GONZÁLEZ\nNombres: JUAN CARLOS\nFecha de nacimiento: 15 MAY 1985\nLugar de nacimiento: CIUDAD DE MÉXICO\nFecha de expedición: 20 ENE 2020\nFecha de vencimiento: 19 ENE 2030" true
+        
+        upload_document "Licencia de Conducir" "Licencia de conducir vigente" "$IDENTIFICACION_ID" "licencia_conducir.pdf" "LICENCIA DE CONDUCIR\n\nNombre: Juan Carlos González\nFecha de nacimiento: 15/05/1985\nTipo: A\nVigencia: 2026\nFolio: LC123456789" false
+    fi
+    
+    # Documentos Legales
+    if [ -n "$LEGAL_ID" ]; then
+        upload_document "Acta de Nacimiento" "Acta de nacimiento certificada" "$LEGAL_ID" "acta_nacimiento.pdf" "ACTA DE NACIMIENTO\n\nNombre: Juan Carlos González\nFecha de nacimiento: 15 de mayo de 1985\nLugar: Ciudad de México, México\nPadre: Carlos González\nMadre: María López\nRegistro Civil: 001\nFolio: 123456" true
+        
+        upload_document "Permiso de Trabajo" "Permiso de trabajo en Estados Unidos" "$LEGAL_ID" "permiso_trabajo.pdf" "EMPLOYMENT AUTHORIZATION DOCUMENT\n\nName: GONZALEZ, JUAN CARLOS\nDate of Birth: 05/15/1985\nCountry of Birth: MEXICO\nCard Number: MSC1234567890\nCategory: C09\nValid from: 01/15/2024\nCard expires: 01/14/2026" true
+        
+        upload_document "Visa de Trabajo" "Visa H-1B para Estados Unidos" "$LEGAL_ID" "visa_trabajo.pdf" "VISA DE TRABAJO H-1B\n\nNombre: Juan Carlos González\nPasaporte: G12345678\nEmpleador: Tech Company Inc.\nFecha de inicio: 01/02/2024\nFecha de vencimiento: 01/01/2027\nEstatus: Aprobado" true
+        
+        upload_document "Testamento" "Testamento y disposiciones finales" "$LEGAL_ID" "testamento.pdf" "TESTAMENTO\n\nYo, Juan Carlos González, en pleno uso de mis facultades mentales, declaro:\n\n1. Beneficiarios principales: María González (esposa)\n2. Beneficiarios secundarios: Ana García (hermana)\n3. Disposiciones especiales para documentos digitales\n4. Instrucciones para acceso de emergencia\n\nFecha: 15 de enero de 2024\nNotario: Lic. Rodríguez" true
+        
+        upload_document "Poder Notarial" "Poder para representación legal" "$LEGAL_ID" "poder_notarial.pdf" "PODER NOTARIAL\n\nOtorgo poder amplio y suficiente a:\nMaria González\nPara que en mi nombre y representación pueda:\n- Realizar trámites bancarios\n- Firmar documentos legales\n- Representarme ante autoridades\n\nFecha: 10 de marzo de 2024\nNotario: Lic. Rodríguez" false
+    fi
+    
+    # Documentos Médicos
+    if [ -n "$MEDICO_ID" ]; then
+        upload_document "Seguro Médico" "Póliza de seguro médico vigente" "$MEDICO_ID" "seguro_medico.pdf" "PÓLIZA DE SEGURO MÉDICO\n\nAsegurado: Juan Carlos González\nNúmero de póliza: SM-789456123\nVigencia: 01/01/2024 - 31/12/2024\nCobertura: Internacional\nDeducible: $500 USD\nAseguradora: SafeHealth Insurance\nContacto emergencia: +1-800-HEALTH" true
+        
+        upload_document "Historial Médico" "Resumen de historial médico" "$MEDICO_ID" "historial_medico.pdf" "HISTORIAL MÉDICO\n\nPaciente: Juan Carlos González\nFecha de nacimiento: 15/05/1985\nTipo de sangre: O+\nAlergias: Penicilina\nMedicamentos actuales: Ninguno\nCondiciones crónicas: Ninguna\nContacto médico: Dr. Martínez\nTeléfono: +1-555-0789\nÚltima revisión: 15/03/2024" true
+    fi
+    
+    # Documentos de Contactos
+    if [ -n "$CONTACTOS_ID" ]; then
+        upload_document "Contacto Abogado" "Información de contacto legal" "$CONTACTOS_ID" "contacto_abogado.pdf" "CONTACTO LEGAL\n\nNombre: Lic. Rodríguez\nEspecialidad: Derecho Migratorio\nTeléfono: +1-555-0456\nEmail: lic.rodriguez@legal.com\nDirección: 123 Legal Ave, Houston, TX\nHorario: Lunes a Viernes 9:00-17:00\nEmergencias: +1-555-0456 ext. 911" true
+        
+        upload_document "Lista de Contactos de Emergencia" "Lista completa de contactos importantes" "$CONTACTOS_ID" "lista_contactos.pdf" "CONTACTOS DE EMERGENCIA\n\n1. María González (Esposa)\n   Tel: +1-555-0123\n   Email: maria.gonzalez@email.com\n\n2. Lic. Rodríguez (Abogado)\n   Tel: +1-555-0456\n   Email: lic.rodriguez@legal.com\n\n3. Dr. Martínez (Médico)\n   Tel: +1-555-0789\n   Email: dr.martinez@hospital.com\n\n4. Ana García (Hermana)\n   Tel: +52-555-0321\n   Email: ana.garcia@email.com" true
+    fi
+    
+    print_success "Documentos creados exitosamente"
+}
+
+# Función para mostrar estadísticas finales
+show_statistics() {
+    print_message $GREEN "=== ESTADÍSTICAS FINALES ==="
+    
+    # Obtener estadísticas de documentos por categoría
+    local doc_response=$(make_request "GET" "$API_URL/documents" "" "-H \"Authorization: Bearer $JWT_TOKEN\"")
+    local contact_response=$(make_request "GET" "$API_URL/contacts" "" "-H \"Authorization: Bearer $JWT_TOKEN\"")
+    
+    if echo "$doc_response" | jq -e '.data' > /dev/null 2>&1; then
+        local total_docs=$(echo "$doc_response" | jq '.data | length')
+        local identificacion_count=$(echo "$doc_response" | jq "[.data[] | select(.category.name == \"Identificación\")] | length")
+        local legal_count=$(echo "$doc_response" | jq "[.data[] | select(.category.name == \"Legal\")] | length")
+        local medico_count=$(echo "$doc_response" | jq "[.data[] | select(.category.name == \"Médico\")] | length")
+        local contactos_count=$(echo "$doc_response" | jq "[.data[] | select(.category.name == \"Contactos\")] | length")
+        
+        print_info "Documentos por categoría:"
+        print_info "  - Identificación: $identificacion_count"
+        print_info "  - Legal: $legal_count"
+        print_info "  - Médico: $medico_count"
+        print_info "  - Contactos: $contactos_count"
+        print_info "  - Total: $total_docs"
+    fi
+    
+    if echo "$contact_response" | jq -e '.data' > /dev/null 2>&1; then
+        local total_contacts=$(echo "$contact_response" | jq '.data | length')
+        print_info "Contactos de emergencia: $total_contacts"
+    fi
+    
+    print_message $GREEN "=== DATOS DE ACCESO ==="
+    print_info "Email: $DEMO_EMAIL"
+    print_info "Contraseña: $DEMO_PASSWORD"
+    print_info "API URL: $API_URL"
+    
+    print_message $GREEN "=== SEEDING COMPLETADO ==="
+    print_success "¡Datos de demostración creados exitosamente!"
+    print_info "Puedes acceder al sistema con las credenciales mostradas arriba."
+}
+
+# Función principal
+main() {
+    print_message $BLUE "=== SAFEBOX MX - SCRIPT DE SEEDING ==="
+    echo
     
     print_info "Usando API URL: $API_URL"
-    echo ""
+    echo
     
-    # Ejecutar seeding
-    register_user
-    setup_emergency_pin
+    # Verificar dependencias
+    check_dependencies
+    
+    # Configurar usuario
+    setup_user
+    
+    # Obtener categorías
+    get_document_categories
+    
+    # Crear contactos
     create_contacts
+    
+    # Crear documentos
     create_documents
     
-    echo ""
+    # Mostrar estadísticas
     show_statistics
-    show_access_info
-    
-    print_message "¡Seeding completado exitosamente!"
-    print_warning "Recuerda: Este es un usuario de DEMOSTRACIÓN. No uses datos reales."
-    echo ""
 }
 
-# Función de ayuda
-show_help() {
-    echo "SafeBox MX - Script de Seeding"
-    echo ""
-    echo "Uso: $0 [opciones]"
-    echo ""
-    echo "Opciones:"
-    echo "  -h, --help     Mostrar esta ayuda"
-    echo "  -l, --local    Usar API local (localhost:1337)"
-    echo "  -p, --prod     Usar API de producción (default)"
-    echo ""
-    echo "Ejemplos:"
-    echo "  $0              # Usar API de producción"
-    echo "  $0 --local      # Usar API local"
-    echo ""
-}
-
-# Procesar argumentos
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        -h|--help)
-            show_help
-            exit 0
-            ;;
-        -l|--local)
-            API_URL="http://localhost:1337/api"
-            shift
-            ;;
-        -p|--prod)
-            API_URL="https://api.mysafebox.org/api"
-            shift
-            ;;
-        *)
-            print_error "Opción desconocida: $1"
-            show_help
-            exit 1
-            ;;
-    esac
-done
-
-# Ejecutar función principal
-main 
+# Ejecutar script principal
+main "$@" 

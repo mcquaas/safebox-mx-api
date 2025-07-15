@@ -83,6 +83,7 @@ export default factories.createCoreController('api::document.document', ({ strap
           category,
           visibleToContacts: visibleToContacts || false,
           emergencyOnly: emergencyOnly || false,
+          uploadedAt: new Date(),
           owner: user.id,
           file: file
         },

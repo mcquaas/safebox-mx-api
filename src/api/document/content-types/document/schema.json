@@ -27,8 +27,7 @@
       "allowedTypes": ["images", "files", "videos", "audios"]
     },
     "uploadedAt": {
-      "type": "datetime",
-      "default": "now"
+      "type": "datetime"
     },
     "visibleToContacts": {
       "type": "boolean",
