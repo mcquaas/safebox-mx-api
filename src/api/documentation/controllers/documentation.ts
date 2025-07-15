@@ -152,7 +152,7 @@ export default {
                     if (infoSection) {
                         const contactInfo = document.createElement('div');
                         contactInfo.className = 'contact';
-                        contactInfo.innerHTML = '<strong>Contacto:</strong> SafeBox MX Team - soporte@safebox.mx';
+                        contactInfo.innerHTML = '<strong>Contacto:</strong> SafeBox MX Team - soporte@mysafebox.org';
                         infoSection.appendChild(contactInfo);
                         
                         const licenseInfo = document.createElement('div');

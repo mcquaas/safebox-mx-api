@@ -168,9 +168,3 @@ curl -H "Authorization: Bearer <token>" https://api.mysafebox.org/api/documents
 - Los endpoints requieren autenticación JWT
 - No se exponen datos sensibles en la documentación
 - Los esquemas incluyen validaciones de seguridad
-
----
-
-**Desarrollado por**: SafeBox MX Team  
-**Versión**: 1.0.0  
-**Última actualización**: Enero 2025 

@@ -8,8 +8,8 @@ const swaggerDefinition = {
     description: 'API para SafeBox MX - Bóveda digital segura para almacenar documentos importantes con cifrado militar, botón de emergencia y contactos designados. Enfocado en personas con vínculos entre México y EE.UU.',
     contact: {
       name: 'SafeBox MX Team',
-      email: 'soporte@safebox.mx',
-      url: 'https://safebox.mx'
+      email: 'soporte@mysafebox.org',
+      url: 'https://mysafebox.org'
     },
     license: {
       name: 'MIT',
