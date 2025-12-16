@@ -1,11 +1,14 @@
-import { factories } from '@strapi/strapi';
-
-export default factories.createCoreController('plugin::users-permissions.user', ({ strapi }) => ({
+/**
+ * Custom user controller methods
+ * These methods extend the default users-permissions user controller
+ */
+export default {
   /**
    * Eliminar cuenta del usuario (soft delete)
    * DELETE /api/user/me
    */
   async deleteAccount(ctx) {
+    const strapi = (global as any).strapi;
     try {
       const user = ctx.state.user;
       
@@ -54,6 +57,7 @@ export default factories.createCoreController('plugin::users-permissions.user', 
    * PUT /api/user/emergency-pin
    */
   async updateEmergencyPin(ctx) {
+    const strapi = (global as any).strapi;
     try {
       const user = ctx.state.user;
       const { currentPin, newPin } = ctx.request.body;
@@ -95,6 +99,7 @@ export default factories.createCoreController('plugin::users-permissions.user', 
    * PUT /api/user/biometric
    */
   async updateBiometric(ctx) {
+    const strapi = (global as any).strapi;
     try {
       const user = ctx.state.user;
       const { enabled } = ctx.request.body;
@@ -123,9 +128,10 @@ export default factories.createCoreController('plugin::users-permissions.user', 
 
   /**
    * Obtener perfil del usuario
-   * GET /api/user/me
+   * GET /api/users/me (overrides default Strapi users-permissions endpoint)
    */
   async me(ctx) {
+    const strapi = (global as any).strapi;
     try {
       const user = ctx.state.user;
       
@@ -141,15 +147,62 @@ export default factories.createCoreController('plugin::users-permissions.user', 
         delete (userData as any).password;
         delete (userData as any).resetPasswordToken;
         delete (userData as any).confirmationToken;
+        delete (userData as any).emergencyPin;
       }
 
-      ctx.body = {
-        data: userData
-      };
+      // Log para debug
+      strapi.log.info('📤 Sending user data:', {
+        id: userData.id,
+        username: userData.username,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        phone: userData.phone
+      });
+
+      // Devolver directamente el usuario (sin envolver en { data: ... })
+      // para mantener compatibilidad con el endpoint por defecto de Strapi
+      ctx.body = userData;
 
     } catch (error) {
       strapi.log.error('Error obteniendo perfil:', error);
       ctx.internalServerError('Error interno del servidor');
     }
+  },
+
+  /**
+   * Actualizar perfil del usuario autenticado
+   * PUT /api/user/update-profile
+   */
+  async updateProfile(ctx) {
+    const strapi = (global as any).strapi;
+    try {
+      const user = ctx.state.user;
+      
+      if (!user) {
+        return ctx.unauthorized('Usuario no autenticado');
+      }
+
+      const { firstName, lastName, phone } = ctx.request.body;
+
+      // Actualizar solo los campos permitidos
+      const updatedUser = await strapi.entityService.update('plugin::users-permissions.user', user.id, {
+        data: {
+          firstName,
+          lastName,
+          phone
+        }
+      });
+
+      // Remover información sensible
+      delete (updatedUser as any).password;
+      delete (updatedUser as any).resetPasswordToken;
+      delete (updatedUser as any).confirmationToken;
+
+      ctx.body = updatedUser;
+
+    } catch (error) {
+      strapi.log.error('Error actualizando perfil:', error);
+      ctx.internalServerError('Error interno del servidor');
+    }
   }
-})); 
+}; 

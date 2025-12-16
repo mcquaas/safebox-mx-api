@@ -14,11 +14,19 @@
   "attributes": {
     "name": {
       "type": "string",
-      "required": true,
-      "unique": true
+      "required": true
     },
     "icon": {
       "type": "string",
+      "required": false
+    },
+    "country": {
+      "type": "enumeration",
+      "enum": ["USA", "MX"],
+      "required": true
+    },
+    "description": {
+      "type": "text",
       "required": false
     },
     "systemCategory": {

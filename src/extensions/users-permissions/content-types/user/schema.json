@@ -67,11 +67,11 @@
     },
     "firstName": {
       "type": "string",
-      "required": true
+      "required": false
     },
     "lastName": {
       "type": "string",
-      "required": true
+      "required": false
     },
     "phone": {
       "type": "string",

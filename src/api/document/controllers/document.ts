@@ -34,6 +34,33 @@ export default factories.createCoreController('api::document.document', ({ strap
         sort: { uploadedAt: 'desc' }
       });
 
+      // Ensure category.country is populated - Strapi might not include it by default
+      // IMPORTANTE: Siempre obtener la categoría completa para asegurar que el campo country esté presente
+      for (const doc of documents as any[]) {
+        if (doc.category && doc.category.id) {
+          // Always fetch full category to ensure country is included
+          const fullCategory = await strapi.entityService.findOne('api::document-category.document-category', doc.category.id);
+          if (fullCategory) {
+            // Actualizar todos los campos de la categoría
+            doc.category.country = (fullCategory as any).country;
+            doc.category.description = (fullCategory as any).description;
+            doc.category.name = fullCategory.name;
+            doc.category.icon = fullCategory.icon;
+            
+            // Log para debugging
+            if (documents.length <= 5) { // Solo log si hay pocos documentos para no saturar
+              strapi.log.info(`📄 Document ${doc.id} (${doc.title}): category="${doc.category.name}", country="${doc.category.country}"`);
+            }
+          } else {
+            strapi.log.error(`❌ Category ${doc.category.id} not found for document ${doc.id}`);
+          }
+        } else {
+          strapi.log.warn(`⚠️ Document ${doc.id} has no category or category.id`);
+        }
+      }
+      
+      strapi.log.info(`📊 Returning ${documents.length} documents with populated categories`);
+
       ctx.body = {
         data: documents,
         meta: {
@@ -67,28 +94,59 @@ export default factories.createCoreController('api::document.document', ({ strap
         return ctx.badRequest('Archivo requerido');
       }
 
-              // Verificar que la categoría pertenece al usuario o es del sistema
-        if (category) {
-          const categoryExists = await strapi.entityService.findOne('api::document-category.document-category', category);
+      // Verificar que la categoría pertenece al usuario o es del sistema
+      if (category) {
+        const categoryExists = await strapi.entityService.findOne('api::document-category.document-category', category);
 
-          if (!categoryExists) {
-            return ctx.badRequest('Categoría no válida');
-          }
+        if (!categoryExists) {
+          return ctx.badRequest('Categoría no válida');
         }
+      }
 
+      // Primero subir el archivo usando el servicio de upload de Strapi
+      const uploadedFiles = await strapi.plugins.upload.services.upload.upload({
+        data: {
+          refId: null,
+          ref: null,
+          field: null,
+        },
+        files: file,
+      });
+
+      // Obtener el ID del archivo subido
+      const uploadedFileId = Array.isArray(uploadedFiles) ? uploadedFiles[0].id : uploadedFiles.id;
+
+      // Crear el documento con la referencia al archivo
       const document = await strapi.entityService.create('api::document.document', {
         data: {
           title,
           description,
           category,
-          visibleToContacts: visibleToContacts || false,
-          emergencyOnly: emergencyOnly || false,
+          visibleToContacts: visibleToContacts === 'true' || visibleToContacts === true,
+          emergencyOnly: emergencyOnly === 'true' || emergencyOnly === true,
           uploadedAt: new Date(),
           owner: user.id,
-          file: file
+          file: uploadedFileId
         },
         populate: ['file', 'category', 'owner']
       });
+
+      // Verificar y populater category.country - Siempre obtener la categoría completa
+      const docWithCategory = document as any;
+      if (docWithCategory.category) {
+        const fullCategory = await strapi.entityService.findOne('api::document-category.document-category', docWithCategory.category.id);
+        if (fullCategory) {
+          docWithCategory.category.country = (fullCategory as any).country;
+          docWithCategory.category.description = (fullCategory as any).description;
+          docWithCategory.category.name = fullCategory.name;
+          docWithCategory.category.icon = fullCategory.icon;
+          strapi.log.info(`✅ Created document ${docWithCategory.id}: title="${title}", category="${docWithCategory.category.name}", country="${docWithCategory.category.country}"`);
+        } else {
+          strapi.log.error(`❌ Category ${docWithCategory.category.id} not found for document ${docWithCategory.id}`);
+        }
+      } else {
+        strapi.log.warn(`⚠️ Document ${docWithCategory.id} created without category`);
+      }
 
       ctx.body = {
         data: document,
@@ -133,6 +191,16 @@ export default factories.createCoreController('api::document.document', ({ strap
         },
         populate: ['file', 'category', 'owner']
       });
+
+      // Ensure category.country is populated
+      const docWithCategory = document as any;
+      if (docWithCategory.category && !docWithCategory.category.country) {
+        const fullCategory = await strapi.entityService.findOne('api::document-category.document-category', docWithCategory.category.id);
+        if (fullCategory) {
+          docWithCategory.category.country = (fullCategory as any).country;
+          docWithCategory.category.description = (fullCategory as any).description;
+        }
+      }
 
       ctx.body = {
         data: document,

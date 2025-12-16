@@ -468,9 +468,12 @@ export interface ApiDocumentCategoryDocumentCategory
     draftAndPublish: false;
   };
   attributes: {
+    country: Schema.Attribute.Enumeration<['USA', 'MX']> &
+      Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    description: Schema.Attribute.Text;
     documents: Schema.Attribute.Relation<'oneToMany', 'api::document.document'>;
     icon: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
@@ -479,9 +482,7 @@ export interface ApiDocumentCategoryDocumentCategory
       'api::document-category.document-category'
     > &
       Schema.Attribute.Private;
-    name: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.Unique;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
     owner: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
@@ -537,7 +538,7 @@ export interface ApiDocumentDocument extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    uploadedAt: Schema.Attribute.DateTime & Schema.Attribute.DefaultTo<'now'>;
+    uploadedAt: Schema.Attribute.DateTime;
     visibleToContacts: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
   };
@@ -577,7 +578,7 @@ export interface ApiEmergencyLogEmergencyLog
     location: Schema.Attribute.String;
     longitude: Schema.Attribute.Decimal;
     publishedAt: Schema.Attribute.DateTime;
-    triggeredAt: Schema.Attribute.DateTime & Schema.Attribute.DefaultTo<'now'>;
+    triggeredAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1071,8 +1072,8 @@ export interface PluginUsersPermissionsUser
       'api::emergency-log.emergency-log'
     >;
     emergencyPin: Schema.Attribute.String & Schema.Attribute.Private;
-    firstName: Schema.Attribute.String & Schema.Attribute.Required;
-    lastName: Schema.Attribute.String & Schema.Attribute.Required;
+    firstName: Schema.Attribute.String;
+    lastName: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',

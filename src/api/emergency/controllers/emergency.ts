@@ -44,26 +44,69 @@ export default factories.createCoreController('api::emergency-log.emergency-log'
       // Crear logs de emergencia para cada contacto notificado
       const emergencyLogs = [];
       
+      // Preparar IDs de documentos para la relación manyToMany
+      const documentIds = emergencyDocuments.map(doc => doc.id);
+      
+      strapi.log.info('🚨 Creando logs de emergencia para', contacts.length, 'contactos');
+      strapi.log.info('📊 Datos recibidos:', { location, latitude, longitude, documentIds });
+      
       for (const contact of contacts) {
-        const emergencyLog = await strapi.entityService.create('api::emergency-log.emergency-log', {
-          data: {
+        try {
+          // Preparar datos para el log de emergencia - NO incluir triggeredAt
+          // El campo triggeredAt ahora es opcional y se puede omitir
+          const logData: any = {
             user: user.id,
             contactNotified: contact.id,
-            location,
-            latitude,
-            longitude,
-            documentsShared: emergencyDocuments.length > 0 ? emergencyDocuments[0].id : null
+          };
+          
+          // Agregar location solo si existe
+          if (location) {
+            logData.location = location;
           }
-        });
+          
+          // Solo agregar latitud y longitud si están definidas y son válidas
+          if (latitude !== undefined && latitude !== null && !isNaN(Number(latitude))) {
+            logData.latitude = parseFloat(latitude.toString());
+          }
+          
+          if (longitude !== undefined && longitude !== null && !isNaN(Number(longitude))) {
+            logData.longitude = parseFloat(longitude.toString());
+          }
+          
+          // Agregar documentos si hay alguno (manyToMany requiere array)
+          if (documentIds.length > 0) {
+            logData.documentsShared = documentIds;
+          }
+          
+          strapi.log.info('📝 Datos del log antes de crear:', JSON.stringify(logData, null, 2));
+          
+          // Crear el log sin triggeredAt - dejarlo como NULL o undefined
+          const emergencyLog = await strapi.entityService.create('api::emergency-log.emergency-log', {
+            data: logData,
+            populate: ['user', 'contactNotified', 'documentsShared']
+          });
 
-        emergencyLogs.push(emergencyLog);
+          strapi.log.info('✅ Log de emergencia creado exitosamente:', emergencyLog.id);
+          emergencyLogs.push(emergencyLog);
 
-        // Notificar al contacto (implementar servicio de notificación)
-        await strapi.service('api::emergency.emergency').notifyContact(contact, user, emergencyDocuments, {
-          location,
-          latitude,
-          longitude
-        });
+          // Notificar al contacto (usar el servicio correcto)
+          try {
+            await strapi.service('api::emergency-log.emergency-log').notifyContact(contact, user, emergencyDocuments, {
+              location,
+              latitude,
+              longitude
+            });
+          } catch (notifyError) {
+            strapi.log.error('⚠️ Error al notificar contacto (continuando):', notifyError);
+            // Continuar aunque falle la notificación
+          }
+        } catch (logError: any) {
+          strapi.log.error('❌ Error creando log de emergencia:', logError);
+          strapi.log.error('❌ Error message:', logError?.message);
+          strapi.log.error('❌ Error stack:', logError?.stack);
+          strapi.log.error('❌ Error name:', logError?.name);
+          throw logError; // Re-lanzar para que se capture en el catch principal
+        }
       }
 
       ctx.body = {
@@ -74,8 +117,14 @@ export default factories.createCoreController('api::emergency-log.emergency-log'
         emergencyLogs
       };
 
-    } catch (error) {
+    } catch (error: any) {
       strapi.log.error('Error al activar emergencia:', error);
+      strapi.log.error('Error details:', {
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name,
+        code: error?.code
+      });
       ctx.internalServerError('Error interno del servidor');
     }
   },

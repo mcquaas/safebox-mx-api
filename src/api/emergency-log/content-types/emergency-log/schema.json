@@ -13,8 +13,7 @@
   "pluginOptions": {},
   "attributes": {
     "triggeredAt": {
-      "type": "datetime",
-      "default": "now"
+      "type": "datetime"
     },
     "location": {
       "type": "string",
