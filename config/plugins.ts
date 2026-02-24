@@ -1,4 +1,22 @@
 export default () => ({
+  email: {
+    config: {
+      provider: 'nodemailer',
+      providerOptions: {
+        host: process.env.EMAIL_SMTP_HOST,
+        port: Number(process.env.EMAIL_SMTP_PORT || 587),
+        secure: process.env.EMAIL_SMTP_SECURE === 'true',
+        auth: {
+          user: process.env.EMAIL_SMTP_USER,
+          pass: process.env.EMAIL_SMTP_PASS,
+        },
+      },
+      settings: {
+        defaultFrom: process.env.EMAIL_FROM || 'noreply@mysafebox.org',
+        defaultReplyTo: process.env.EMAIL_REPLY_TO || process.env.EMAIL_FROM || 'soporte@mysafebox.org',
+      },
+    },
+  },
   documentation: {
     enabled: true,
     config: {

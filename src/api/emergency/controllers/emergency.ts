@@ -20,11 +20,13 @@ export default factories.createCoreController('api::emergency-log.emergency-log'
         return ctx.unauthorized('PIN de emergencia incorrecto');
       }
 
-      // Obtener contactos que pueden recibir alertas de emergencia
+      const notifyAllContactsForDemo = process.env.EMERGENCY_DEMO_NOTIFY_ALL_CONTACTS === 'true';
+
+      // En producción se respeta el permiso de alerta; en demo se puede notificar a todos.
       const contacts = await strapi.entityService.findMany('api::contact.contact', {
         filters: {
           owner: user.id,
-          canReceiveEmergencyAlert: true
+          ...(!notifyAllContactsForDemo && { canReceiveEmergencyAlert: true }),
         }
       });
 
@@ -43,6 +45,8 @@ export default factories.createCoreController('api::emergency-log.emergency-log'
 
       // Crear logs de emergencia para cada contacto notificado
       const emergencyLogs = [];
+      const failedContacts: Array<{ contactId: string | number; name: string; reason: string }> = [];
+      let notificationsSent = 0;
       
       // Preparar IDs de documentos para la relación manyToMany
       const documentIds = emergencyDocuments.map(doc => doc.id);
@@ -91,21 +95,30 @@ export default factories.createCoreController('api::emergency-log.emergency-log'
 
           // Notificar al contacto (usar el servicio correcto)
           try {
-            await strapi.service('api::emergency-log.emergency-log').notifyContact(contact, user, emergencyDocuments, {
+            await strapi.service('api::emergency.emergency').notifyContact(contact, user, emergencyDocuments, {
               location,
               latitude,
               longitude
             });
+            notificationsSent += 1;
           } catch (notifyError) {
             strapi.log.error('⚠️ Error al notificar contacto (continuando):', notifyError);
-            // Continuar aunque falle la notificación
+            failedContacts.push({
+              contactId: contact.id,
+              name: contact.fullName || contact.email || contact.phone || `Contacto ${contact.id}`,
+              reason: notifyError instanceof Error ? notifyError.message : 'Error desconocido al notificar',
+            });
           }
         } catch (logError: any) {
           strapi.log.error('❌ Error creando log de emergencia:', logError);
           strapi.log.error('❌ Error message:', logError?.message);
           strapi.log.error('❌ Error stack:', logError?.stack);
           strapi.log.error('❌ Error name:', logError?.name);
-          throw logError; // Re-lanzar para que se capture en el catch principal
+          failedContacts.push({
+            contactId: contact.id,
+            name: contact.fullName || contact.email || contact.phone || `Contacto ${contact.id}`,
+            reason: logError?.message || 'Error al crear log de emergencia',
+          });
         }
       }
 
@@ -114,7 +127,14 @@ export default factories.createCoreController('api::emergency-log.emergency-log'
         message: 'Emergencia activada exitosamente',
         contactsNotified: contacts.length,
         documentsShared: emergencyDocuments.length,
-        emergencyLogs
+        emergencyLogs,
+        notifyMode: notifyAllContactsForDemo ? 'all_contacts_demo' : 'allowed_contacts_only',
+        notificationSummary: {
+          attempted: contacts.length,
+          sent: notificationsSent,
+          failed: failedContacts.length,
+          failedContacts,
+        },
       };
 
     } catch (error: any) {

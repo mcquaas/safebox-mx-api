@@ -1,6 +1,10 @@
 import { factories } from '@strapi/strapi';
 
 export default factories.createCoreService('api::emergency-log.emergency-log', ({ strapi }) => ({
+  isDemoSimulatedDeliveryEnabled() {
+    return process.env.EMERGENCY_DEMO_SIMULATE_DELIVERY === 'true';
+  },
+
   /**
    * Notificar a un contacto de emergencia
    */
@@ -51,6 +55,11 @@ export default factories.createCoreService('api::emergency-log.emergency-log', (
    */
   async sendSMS(phone, message) {
     try {
+      if ((this as any).isDemoSimulatedDeliveryEnabled()) {
+        strapi.log.info(`[DEMO] SMS simulado a ${phone}: ${message.substring(0, 80)}...`);
+        return;
+      }
+
       // Implementar integración con Twilio o similar
       // const twilio = require('twilio');
       // const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
@@ -73,6 +82,11 @@ export default factories.createCoreService('api::emergency-log.emergency-log', (
    */
   async sendEmail(email, subject, message, documents = []) {
     try {
+      if ((this as any).isDemoSimulatedDeliveryEnabled()) {
+        strapi.log.info(`[DEMO] Email simulado a ${email}: ${subject}`);
+        return;
+      }
+
       // Construir HTML del email
       let html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -112,6 +126,7 @@ export default factories.createCoreService('api::emergency-log.emergency-log', (
       await strapi.plugins['email'].services.email.send({
         to: email,
         subject: subject,
+        text: message,
         html: html
       });
 
