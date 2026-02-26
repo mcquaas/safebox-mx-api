@@ -60,19 +60,26 @@ export default factories.createCoreService('api::emergency-log.emergency-log', (
         return;
       }
 
-      // Implementar integración con Twilio o similar
-      // const twilio = require('twilio');
-      // const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
-      
-      // await client.messages.create({
-      //   body: message,
-      //   from: process.env.TWILIO_PHONE,
-      //   to: phone
-      // });
+      const sid = process.env.TWILIO_SID;
+      const token = process.env.TWILIO_TOKEN;
+      const from = process.env.TWILIO_PHONE;
 
-      strapi.log.info(`SMS enviado a ${phone}: ${message.substring(0, 50)}...`);
+      if (!sid || !token || !from) {
+        strapi.log.warn('Twilio no configurado (TWILIO_SID, TWILIO_TOKEN o TWILIO_PHONE faltantes) - omitiendo SMS');
+        return;
+      }
+
+      // Recortar el cuerpo del SMS a 320 caracteres para compatibilidad con plan trial
+      const body = message.length > 320 ? message.substring(0, 317) + '...' : message;
+
+      const twilio = require('twilio');
+      const client = twilio(sid, token);
+
+      await client.messages.create({ body, from, to: phone });
+
+      strapi.log.info(`SMS enviado via Twilio a ${phone}`);
     } catch (error) {
-      strapi.log.error('Error enviando SMS:', error);
+      strapi.log.error('Error enviando SMS via Twilio:', error);
       throw error;
     }
   },
