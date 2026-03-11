@@ -1,0 +1,59 @@
+{
+  "kind": "singleType",
+  "collectionName": "app_config",
+  "info": {
+    "singularName": "app-config",
+    "pluralName": "app-configs",
+    "displayName": "App Config",
+    "description": "Global config editable from admin. Twilio, OpenAI, and demo flags. Env vars are used as fallback if empty."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "twilioSid": {
+      "type": "string",
+      "required": false,
+      "description": "Twilio Account SID. Fallback: TWILIO_SID in .env"
+    },
+    "twilioToken": {
+      "type": "string",
+      "required": false,
+      "description": "Twilio Auth Token. Fallback: TWILIO_TOKEN in .env"
+    },
+    "twilioPhone": {
+      "type": "string",
+      "required": false,
+      "description": "Twilio sender number (e.g. +17404956845). Fallback: TWILIO_PHONE in .env"
+    },
+    "twilioTestTo": {
+      "type": "string",
+      "required": false,
+      "description": "Destination for test SMS (e.g. +525554008788). Fallback: TWILIO_TEST_TO in .env"
+    },
+    "openaiApiKey": {
+      "type": "string",
+      "required": false,
+      "description": "OpenAI API key for chatbot. Fallback: OPENAI_API_KEY in .env"
+    },
+    "openaiModel": {
+      "type": "string",
+      "required": false,
+      "default": "gpt-4o-mini",
+      "description": "OpenAI chat model. Fallback: OPENAI_MODEL or gpt-4o-mini"
+    },
+    "emergencyDemoSimulateDelivery": {
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "If true, SMS/email are only logged, not sent (demo mode)"
+    },
+    "emergencyDemoNotifyAllContacts": {
+      "type": "boolean",
+      "required": false,
+      "default": false,
+      "description": "If true, emergency notifies all contacts regardless of canReceiveEmergencyAlert"
+    }
+  }
+}

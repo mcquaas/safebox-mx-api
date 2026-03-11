@@ -178,5 +178,22 @@ export default {
         strapi.log.info(`✅ Categoría del sistema creada: ${category.name} (${category.country})`);
       }
     }
+
+    // Ensure App Config (single type) exists so admin can edit it
+    try {
+      const existing = await strapi.entityService.findMany('api::app-config.app-config', { limit: 1 });
+      if (!existing || existing.length === 0) {
+        await strapi.entityService.create('api::app-config.app-config', {
+          data: {
+            openaiModel: 'gpt-4o-mini',
+            emergencyDemoSimulateDelivery: false,
+            emergencyDemoNotifyAllContacts: false,
+          },
+        });
+        strapi.log.info('✅ App Config (single type) creado. Edita en Admin > Content Manager > App Config.');
+      }
+    } catch (e) {
+      strapi.log.warn('App Config bootstrap skipped:', (e as Error).message);
+    }
   },
 };

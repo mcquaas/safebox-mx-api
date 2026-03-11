@@ -589,6 +589,45 @@ export interface ApiEmergencyLogEmergencyLog
   };
 }
 
+export interface ApiAppConfigAppConfig extends Struct.SingleTypeSchema {
+  collectionName: 'app_config';
+  info: {
+    description: string;
+    displayName: 'App Config';
+    pluralName: 'app-configs';
+    singularName: 'app-config';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    emergencyDemoNotifyAllContacts: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    emergencyDemoSimulateDelivery: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::app-config.app-config'
+    > &
+      Schema.Attribute.Private;
+    openaiApiKey: Schema.Attribute.String;
+    openaiModel: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'gpt-4o-mini'>;
+    publishedAt: Schema.Attribute.DateTime;
+    twilioPhone: Schema.Attribute.String;
+    twilioSid: Schema.Attribute.String;
+    twilioTestTo: Schema.Attribute.String;
+    twilioToken: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface PluginContentReleasesRelease
   extends Struct.CollectionTypeSchema {
   collectionName: 'strapi_releases';
@@ -1118,6 +1157,7 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::auth-log.auth-log': ApiAuthLogAuthLog;
       'api::contact.contact': ApiContactContact;
+      'api::app-config.app-config': ApiAppConfigAppConfig;
       'api::document-category.document-category': ApiDocumentCategoryDocumentCategory;
       'api::document.document': ApiDocumentDocument;
       'api::emergency-log.emergency-log': ApiEmergencyLogEmergencyLog;

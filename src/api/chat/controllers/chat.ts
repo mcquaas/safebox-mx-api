@@ -58,11 +58,14 @@ export default {
         return ctx.badRequest('El campo "message" es requerido y no puede estar vacío');
       }
 
-      const apiKey = process.env.OPENAI_API_KEY;
+      const appConfig = await strapi.service('api::app-config.app-config').getConfig();
+      const apiKey = appConfig.openaiApiKey || process.env.OPENAI_API_KEY;
       if (!apiKey) {
-        strapi.log.error('OPENAI_API_KEY no configurada en variables de entorno');
+        strapi.log.error('OPENAI_API_KEY no configurada (Admin > App Config o .env)');
         return ctx.internalServerError('Servicio de asistente no configurado');
       }
+
+      const model = appConfig.openaiModel || 'gpt-4o-mini';
 
       const messages = [
         { role: 'system', content: SYSTEM_PROMPT },
@@ -80,7 +83,7 @@ export default {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+          model,
           messages,
           temperature: 0.7,
           max_tokens: 1000,

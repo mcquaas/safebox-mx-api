@@ -20,7 +20,8 @@ export default factories.createCoreController('api::emergency-log.emergency-log'
         return ctx.unauthorized('PIN de emergencia incorrecto');
       }
 
-      const notifyAllContactsForDemo = process.env.EMERGENCY_DEMO_NOTIFY_ALL_CONTACTS === 'true';
+      const appConfig = await strapi.service('api::app-config.app-config').getConfig();
+      const notifyAllContactsForDemo = appConfig.emergencyDemoNotifyAllContacts;
 
       // En producción se respeta el permiso de alerta; en demo se puede notificar a todos.
       const contacts = await strapi.entityService.findMany('api::contact.contact', {
@@ -95,7 +96,7 @@ export default factories.createCoreController('api::emergency-log.emergency-log'
 
           // Notificar al contacto (usar el servicio correcto)
           try {
-            await strapi.service('api::emergency.emergency').notifyContact(contact, user, emergencyDocuments, {
+            await strapi.service('api::emergency-log.emergency-log').notifyContact(contact, user, emergencyDocuments, {
               location,
               latitude,
               longitude
@@ -171,7 +172,7 @@ export default factories.createCoreController('api::emergency-log.emergency-log'
       }
 
       // Enviar notificación
-      await strapi.service('api::emergency.emergency').notifyContact(contact, user, [], {}, message);
+      await strapi.service('api::emergency-log.emergency-log').notifyContact(contact, user, [], {}, message);
 
       ctx.body = {
         success: true,
