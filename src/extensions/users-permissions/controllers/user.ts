@@ -182,15 +182,17 @@ export default {
         return ctx.unauthorized('Usuario no autenticado');
       }
 
-      const { firstName, lastName, phone } = ctx.request.body;
+      const { firstName, lastName, phone, birthdate } = ctx.request.body;
 
-      // Actualizar solo los campos permitidos
+      // Actualizar solo los campos permitidos (evitar enviar undefined)
+      const updateData: Record<string, any> = {};
+      if (firstName !== undefined) updateData.firstName = firstName;
+      if (lastName !== undefined) updateData.lastName = lastName;
+      if (phone !== undefined) updateData.phone = phone;
+      if (birthdate !== undefined) updateData.birthdate = birthdate;
+
       const updatedUser = await strapi.entityService.update('plugin::users-permissions.user', user.id, {
-        data: {
-          firstName,
-          lastName,
-          phone
-        }
+        data: updateData
       });
 
       // Remover información sensible
