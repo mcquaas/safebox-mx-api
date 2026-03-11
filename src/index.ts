@@ -91,6 +91,8 @@ export default {
           'api::document-category.document-category.create',
           'api::document-category.document-category.update',
           'api::document-category.document-category.delete',
+          // Chat / asistente IA
+          'api::chat.chat.message',
           // Emergencia
           'api::emergency.emergency.trigger',
           'api::emergency.emergency.notify',

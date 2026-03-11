@@ -1,6 +1,10 @@
 import { factories } from '@strapi/strapi';
 
 export default factories.createCoreService('api::emergency-log.emergency-log', ({ strapi }) => ({
+  isDemoSimulatedDeliveryEnabled() {
+    return process.env.EMERGENCY_DEMO_SIMULATE_DELIVERY === 'true';
+  },
+
   /**
    * Notificar a un contacto de emergencia
    */
@@ -51,19 +55,31 @@ export default factories.createCoreService('api::emergency-log.emergency-log', (
    */
   async sendSMS(phone, message) {
     try {
-      // Implementar integración con Twilio o similar
-      // const twilio = require('twilio');
-      // const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
-      
-      // await client.messages.create({
-      //   body: message,
-      //   from: process.env.TWILIO_PHONE,
-      //   to: phone
-      // });
+      if ((this as any).isDemoSimulatedDeliveryEnabled()) {
+        strapi.log.info(`[DEMO] SMS simulado a ${phone}: ${message.substring(0, 80)}...`);
+        return;
+      }
 
-      strapi.log.info(`SMS enviado a ${phone}: ${message.substring(0, 50)}...`);
+      const sid = process.env.TWILIO_SID;
+      const token = process.env.TWILIO_TOKEN;
+      const from = process.env.TWILIO_PHONE;
+
+      if (!sid || !token || !from) {
+        strapi.log.warn('Twilio no configurado (TWILIO_SID, TWILIO_TOKEN o TWILIO_PHONE faltantes) - omitiendo SMS');
+        return;
+      }
+
+      // Recortar el cuerpo del SMS a 320 caracteres para compatibilidad con plan trial
+      const body = message.length > 320 ? message.substring(0, 317) + '...' : message;
+
+      const twilio = require('twilio');
+      const client = twilio(sid, token);
+
+      await client.messages.create({ body, from, to: phone });
+
+      strapi.log.info(`SMS enviado via Twilio a ${phone}`);
     } catch (error) {
-      strapi.log.error('Error enviando SMS:', error);
+      strapi.log.error('Error enviando SMS via Twilio:', error);
       throw error;
     }
   },
@@ -73,6 +89,11 @@ export default factories.createCoreService('api::emergency-log.emergency-log', (
    */
   async sendEmail(email, subject, message, documents = []) {
     try {
+      if ((this as any).isDemoSimulatedDeliveryEnabled()) {
+        strapi.log.info(`[DEMO] Email simulado a ${email}: ${subject}`);
+        return;
+      }
+
       // Construir HTML del email
       let html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -112,6 +133,7 @@ export default factories.createCoreService('api::emergency-log.emergency-log', (
       await strapi.plugins['email'].services.email.send({
         to: email,
         subject: subject,
+        text: message,
         html: html
       });
 

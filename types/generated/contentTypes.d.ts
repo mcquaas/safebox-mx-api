@@ -1049,6 +1049,7 @@ export interface PluginUsersPermissionsUser
     authLogs: Schema.Attribute.Relation<'oneToMany', 'api::auth-log.auth-log'>;
     biometricEnabled: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>;
+    birthdate: Schema.Attribute.Date;
     blocked: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     confirmationToken: Schema.Attribute.String & Schema.Attribute.Private;
     confirmed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
