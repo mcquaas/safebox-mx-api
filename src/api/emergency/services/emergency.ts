@@ -51,7 +51,17 @@ export default factories.createCoreService('api::emergency-log.emergency-log', (
   },
 
   /**
-   * Enviar SMS
+   * Normaliza teléfono a E.164 para Twilio (+countrycode + número sin espacios).
+   */
+  normalizePhoneForTwilio(phone: string): string {
+    if (!phone || typeof phone !== 'string') return '';
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 0) return '';
+    return phone.trim().startsWith('+') ? `+${digits}` : `+${digits}`;
+  },
+
+  /**
+   * Enviar SMS vía Twilio a los contactos guardados del usuario.
    */
   async sendSMS(phone, message) {
     try {
@@ -69,15 +79,20 @@ export default factories.createCoreService('api::emergency-log.emergency-log', (
         return;
       }
 
-      // Recortar el cuerpo del SMS a 320 caracteres para compatibilidad con plan trial
+      const toE164 = (this as any).normalizePhoneForTwilio(phone);
+      if (!toE164) {
+        strapi.log.warn(`Número de teléfono inválido para SMS: ${phone}`);
+        return;
+      }
+
       const body = message.length > 320 ? message.substring(0, 317) + '...' : message;
 
       const twilio = require('twilio');
       const client = twilio(sid, token);
 
-      await client.messages.create({ body, from, to: phone });
+      await client.messages.create({ body, from, to: toE164 });
 
-      strapi.log.info(`SMS enviado via Twilio a ${phone}`);
+      strapi.log.info(`SMS enviado via Twilio a ${toE164}`);
     } catch (error) {
       strapi.log.error('Error enviando SMS via Twilio:', error);
       throw error;
