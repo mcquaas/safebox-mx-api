@@ -1,5 +1,15 @@
 import { factories } from '@strapi/strapi';
 
+const getContactPayload = (body: any) => body?.data || body || {};
+const getDigits = (phone?: string) => String(phone || '').replace(/\D/g, '');
+const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const normalizeBoolean = (value: any, fallback: boolean) => {
+  if (value === undefined || value === null) return fallback;
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') return value.toLowerCase() === 'true';
+  return Boolean(value);
+};
+
 export default factories.createCoreController('api::contact.contact', ({ strapi }) => ({
   /**
    * Crear contacto
@@ -13,20 +23,32 @@ export default factories.createCoreController('api::contact.contact', ({ strapi 
         return ctx.unauthorized('Usuario no autenticado');
       }
 
-      const { fullName, phone, email, relationship, canReceiveEmergencyAlert, canViewSharedDocs } = ctx.request.body;
+      const { fullName, phone, email, relationship, canReceiveEmergencyAlert, canViewSharedDocs } = getContactPayload(ctx.request.body);
+      const cleanFullName = String(fullName || '').trim();
+      const cleanPhone = String(phone || '').trim();
+      const cleanEmail = String(email || '').trim();
+      const cleanRelationship = String(relationship || '').trim();
 
-      if (!fullName || !phone || !relationship) {
+      if (!cleanFullName || !cleanPhone || !cleanRelationship) {
         return ctx.badRequest('Nombre completo, teléfono y relación son requeridos');
+      }
+
+      if (getDigits(cleanPhone).length < 10) {
+        return ctx.badRequest('Ingresa un teléfono válido con al menos 10 dígitos');
+      }
+
+      if (cleanEmail && !isValidEmail(cleanEmail)) {
+        return ctx.badRequest('Ingresa un email válido o deja el campo vacío');
       }
 
       const contact = await strapi.entityService.create('api::contact.contact', {
         data: {
-          fullName,
-          phone,
-          email,
-          relationship,
-          canReceiveEmergencyAlert: canReceiveEmergencyAlert ?? true,
-          canViewSharedDocs: canViewSharedDocs ?? false,
+          fullName: cleanFullName,
+          phone: cleanPhone,
+          ...(cleanEmail && { email: cleanEmail }),
+          relationship: cleanRelationship,
+          canReceiveEmergencyAlert: normalizeBoolean(canReceiveEmergencyAlert, true),
+          canViewSharedDocs: normalizeBoolean(canViewSharedDocs, false),
           owner: user.id
         }
       });
@@ -129,17 +151,47 @@ export default factories.createCoreController('api::contact.contact', ({ strapi 
         return ctx.notFound('Contacto no encontrado');
       }
 
-      const { fullName, phone, email, relationship, canReceiveEmergencyAlert, canViewSharedDocs } = ctx.request.body;
+      const { fullName, phone, email, relationship, canReceiveEmergencyAlert, canViewSharedDocs } = getContactPayload(ctx.request.body);
+      const data: any = {};
+
+      if (fullName !== undefined) {
+        const cleanFullName = String(fullName || '').trim();
+        if (!cleanFullName) return ctx.badRequest('Nombre completo es requerido');
+        data.fullName = cleanFullName;
+      }
+
+      if (phone !== undefined) {
+        const cleanPhone = String(phone || '').trim();
+        if (getDigits(cleanPhone).length < 10) {
+          return ctx.badRequest('Ingresa un teléfono válido con al menos 10 dígitos');
+        }
+        data.phone = cleanPhone;
+      }
+
+      if (email !== undefined) {
+        const cleanEmail = String(email || '').trim();
+        if (cleanEmail && !isValidEmail(cleanEmail)) {
+          return ctx.badRequest('Ingresa un email válido o deja el campo vacío');
+        }
+        data.email = cleanEmail || null;
+      }
+
+      if (relationship !== undefined) {
+        const cleanRelationship = String(relationship || '').trim();
+        if (!cleanRelationship) return ctx.badRequest('Relación es requerida');
+        data.relationship = cleanRelationship;
+      }
+
+      if (canReceiveEmergencyAlert !== undefined) {
+        data.canReceiveEmergencyAlert = normalizeBoolean(canReceiveEmergencyAlert, true);
+      }
+
+      if (canViewSharedDocs !== undefined) {
+        data.canViewSharedDocs = normalizeBoolean(canViewSharedDocs, false);
+      }
 
       const contact = await strapi.entityService.update('api::contact.contact', id, {
-        data: {
-          fullName,
-          phone,
-          email,
-          relationship,
-          canReceiveEmergencyAlert,
-          canViewSharedDocs
-        }
+        data
       });
 
       ctx.body = {

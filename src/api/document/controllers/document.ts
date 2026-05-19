@@ -1,5 +1,22 @@
 import { factories } from '@strapi/strapi';
 
+const hasMexicanPassportSignal = (value?: string) => {
+  return /pasaporte\s+(mexicano|mx)|mexican\s+passport/i.test(value || '');
+};
+
+const findMexicoIdentificationCategory = async (strapi: any) => {
+  const categories = await strapi.entityService.findMany('api::document-category.document-category', {
+    filters: {
+      name: 'Identificación',
+      country: 'MX',
+      systemCategory: true
+    },
+    limit: 1
+  });
+
+  return categories?.[0] || null;
+};
+
 export default factories.createCoreController('api::document.document', ({ strapi }) => ({
   /**
    * Obtener documentos del usuario actual con filtros
@@ -41,6 +58,22 @@ export default factories.createCoreController('api::document.document', ({ strap
           // Always fetch full category to ensure country is included
           const fullCategory = await strapi.entityService.findOne('api::document-category.document-category', doc.category.id);
           if (fullCategory) {
+            if (hasMexicanPassportSignal(doc.title) && (fullCategory as any).country === 'USA') {
+              const mexicoIdentification = await findMexicoIdentificationCategory(strapi);
+              if (mexicoIdentification) {
+                await strapi.entityService.update('api::document.document', doc.id, {
+                  data: { category: mexicoIdentification.id }
+                });
+                doc.category.id = mexicoIdentification.id;
+                fullCategory.id = mexicoIdentification.id;
+                fullCategory.name = mexicoIdentification.name;
+                (fullCategory as any).country = (mexicoIdentification as any).country;
+                (fullCategory as any).description = (mexicoIdentification as any).description;
+                fullCategory.icon = mexicoIdentification.icon;
+                strapi.log.info(`✅ Documento ${doc.id} recategorizado a México: "${doc.title}"`);
+              }
+            }
+
             // Actualizar todos los campos de la categoría
             doc.category.country = (fullCategory as any).country;
             doc.category.description = (fullCategory as any).description;
@@ -94,9 +127,17 @@ export default factories.createCoreController('api::document.document', ({ strap
         return ctx.badRequest('Archivo requerido');
       }
 
+      let resolvedCategory = category;
+      if (hasMexicanPassportSignal(title)) {
+        const mexicoIdentification = await findMexicoIdentificationCategory(strapi);
+        if (mexicoIdentification) {
+          resolvedCategory = mexicoIdentification.id;
+        }
+      }
+
       // Verificar que la categoría pertenece al usuario o es del sistema
-      if (category) {
-        const categoryExists = await strapi.entityService.findOne('api::document-category.document-category', category);
+      if (resolvedCategory) {
+        const categoryExists = await strapi.entityService.findOne('api::document-category.document-category', resolvedCategory);
 
         if (!categoryExists) {
           return ctx.badRequest('Categoría no válida');
@@ -121,7 +162,7 @@ export default factories.createCoreController('api::document.document', ({ strap
         data: {
           title,
           description,
-          category,
+          category: resolvedCategory,
           visibleToContacts: visibleToContacts === 'true' || visibleToContacts === true,
           emergencyOnly: emergencyOnly === 'true' || emergencyOnly === true,
           uploadedAt: new Date(),
@@ -180,12 +221,19 @@ export default factories.createCoreController('api::document.document', ({ strap
       }
 
       const { title, description, category, visibleToContacts, emergencyOnly } = ctx.request.body;
+      let resolvedCategory = category;
+      if (hasMexicanPassportSignal(title)) {
+        const mexicoIdentification = await findMexicoIdentificationCategory(strapi);
+        if (mexicoIdentification) {
+          resolvedCategory = mexicoIdentification.id;
+        }
+      }
 
       const document = await strapi.entityService.update('api::document.document', id, {
         data: {
           title,
           description,
-          category,
+          category: resolvedCategory,
           visibleToContacts,
           emergencyOnly
         },

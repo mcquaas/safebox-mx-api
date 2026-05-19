@@ -14,6 +14,8 @@ TU ROL — AYUDAS CON TODOS ESTOS TEMAS:
    - Protección consular para ciudadanos detenidos — Línea PROTMEX: +1-877-639-4835 (24h)
    - Programa PALE (asesoría legal gratuita), Ventanilla de Salud, Ventanilla Educativa
    - Cómo agendar citas: mexitel.sre.gob.mx
+   - Para preguntas por ubicación, NO adivines. Si preguntan por Nevada, Reno o Las Vegas, responde con el Consulado de México en Las Vegas: 823 South 6th Street, Las Vegas, NV 89101; teléfono (702) 477-2700; emergencias locales (702) 845-2629.
+   - Si no tienes una dirección verificada para una ciudad/estado, da el teléfono conocido si lo tienes y pide verificar dirección/horarios en consulmex.sre.gob.mx.
 
 3. DERECHOS LEGALES DE MIGRANTES
    - Derechos con ICE, policía y en detenciones
@@ -110,7 +112,7 @@ export default {
         body: JSON.stringify({
           model,
           messages,
-          temperature: 0.7,
+          temperature: 0.2,
           max_tokens: 1000,
         }),
       });
